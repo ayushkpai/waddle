@@ -77,6 +77,16 @@ type GameState = {
   best: number;
 };
 
+function loadBest(): number {
+  try {
+    const raw = window.localStorage.getItem("waddle-best");
+    const n = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(n) ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default function WaddleGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const s = useRef<GameState>({
@@ -129,6 +139,12 @@ export default function WaddleGame() {
   }, [setPlaying]);
 
   useEffect(() => {
+    const st = s.current;
+    st.best = loadBest();
+    setBest(st.best);
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -162,6 +178,11 @@ export default function WaddleGame() {
       if (nb) {
         g.best = sc;
         setBest(sc);
+        try {
+          window.localStorage.setItem("waddle-best", String(sc));
+        } catch {
+          /* ignore */
+        }
       }
       setIsNewBest(nb);
       setPhase("over");
