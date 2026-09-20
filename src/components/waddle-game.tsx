@@ -166,7 +166,7 @@ export default function WaddleGame() {
     const jump = () => {
       const g = s.current;
       if (g.onGround || g.jumps < 2) {
-        g.vy = g.onGround ? -JUMP_V : -JUMP_V * 0.85;
+        g.vy = g.onGround ? -JUMP_V : -JUMP_V * 1.15;
         g.onGround = false;
         g.jumps += 1;
         beep(g, 620, 0.09, "sine");
