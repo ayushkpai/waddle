@@ -68,6 +68,7 @@ type GameState = {
   py: number;
   vy: number;
   onGround: boolean;
+  jumps: number;
   entities: Entity[];
   spawnTimer: number;
   fish: number;
@@ -96,6 +97,7 @@ export default function WaddleGame() {
     py: GROUND_Y,
     vy: 0,
     onGround: true,
+    jumps: 0,
     entities: [],
     spawnTimer: 0.8,
     fish: 0,
@@ -122,6 +124,7 @@ export default function WaddleGame() {
     st.py = GROUND_Y;
     st.vy = 0;
     st.onGround = true;
+    st.jumps = 0;
     st.speed = SPEEDS[speedRef.current].start;
     st.spawnTimer = 0.7;
     st.phase = "playing";
@@ -162,9 +165,10 @@ export default function WaddleGame() {
 
     const jump = () => {
       const g = s.current;
-      if (g.onGround) {
-        g.vy = -JUMP_V;
+      if (g.onGround || g.jumps < 2) {
+        g.vy = g.onGround ? -JUMP_V : -JUMP_V * 0.85;
         g.onGround = false;
+        g.jumps += 1;
         beep(g, 620, 0.09, "sine");
       }
     };
@@ -215,6 +219,7 @@ export default function WaddleGame() {
           g.py = GROUND_Y;
           g.vy = 0;
           g.onGround = true;
+          g.jumps = 0;
         }
       }
 
@@ -594,7 +599,7 @@ export default function WaddleGame() {
             <h2 className="text-2xl font-black">Ready to waddle?</h2>
             <p className="max-w-sm text-sm text-slate-200">
               Press <kbd className="rounded bg-white/20 px-1.5 py-0.5">Space</kbd>, click, or tap to
-              jump. Grab fish, dodge icebergs and snowmen.
+              jump. Jump again mid-air for a double jump. Grab fish, dodge icebergs and snowmen.
             </p>
             <div className="mt-1 flex gap-2">
               {(Object.keys(SPEEDS) as SpeedLevel[]).map((lvl) => (
