@@ -7,10 +7,46 @@ const H = 450;
 const GROUND_Y = 350;
 const GRAVITY = 2200;
 const JUMP_V = 730;
-const START_SPEED = 215;
-const MAX_SPEED = 780;
 const PLAYER_X = 120;
 const FISH_POINTS = 50;
+
+type SpeedLevel = "slow" | "normal" | "fast";
+
+type SpeedConfig = {
+  label: string;
+  emoji: string;
+  hint: string;
+  start: number;
+  max: number;
+  accel: number;
+};
+
+const SPEEDS: Record<SpeedLevel, SpeedConfig> = {
+  slow: {
+    label: "Slow",
+    emoji: "🐢",
+    hint: "Easy pace, lots of time to jump",
+    start: 170,
+    max: 600,
+    accel: 5,
+  },
+  normal: {
+    label: "Normal",
+    emoji: "🐧",
+    hint: "A proper waddle",
+    start: 215,
+    max: 780,
+    accel: 6,
+  },
+  fast: {
+    label: "Fast",
+    emoji: "💨",
+    hint: "Blink and you'll miss it",
+    start: 280,
+    max: 1000,
+    accel: 9,
+  },
+};
 
 type Kind = "ice" | "snowman" | "fish";
 
@@ -55,7 +91,7 @@ export default function WaddleGame() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const s = useRef<GameState>({
     phase: "ready",
-    speed: START_SPEED,
+    speed: SPEEDS.normal.start,
     dist: 0,
     py: GROUND_Y,
     vy: 0,
@@ -73,6 +109,8 @@ export default function WaddleGame() {
   const [finalScore, setFinalScore] = useState(0);
   const [best, setBest] = useState(0);
   const [isNewBest, setIsNewBest] = useState(false);
+  const [speedLevel, setSpeedLevel] = useState<SpeedLevel>("normal");
+  const speedRef = useRef<SpeedLevel>("normal");
 
   const scoreOf = useCallback((st: GameState) => Math.floor(st.dist / 10) + st.fish * FISH_POINTS, []);
 
@@ -84,7 +122,7 @@ export default function WaddleGame() {
     st.py = GROUND_Y;
     st.vy = 0;
     st.onGround = true;
-    st.speed = START_SPEED;
+    st.speed = SPEEDS[speedRef.current].start;
     st.spawnTimer = 0.7;
     st.phase = "playing";
     setFinalScore(0);
@@ -166,7 +204,8 @@ export default function WaddleGame() {
 
       if (g.phase !== "playing") return;
 
-      g.speed = Math.min(MAX_SPEED, g.speed + 6 * dt);
+      const c = SPEEDS[speedRef.current];
+      g.speed = Math.min(c.max, g.speed + c.accel * dt);
       g.dist += g.speed * dt;
 
       if (!g.onGround) {
@@ -557,9 +596,31 @@ export default function WaddleGame() {
               Press <kbd className="rounded bg-white/20 px-1.5 py-0.5">Space</kbd>, click, or tap to
               jump. Grab fish, dodge icebergs and snowmen.
             </p>
+            <div className="mt-1 flex gap-2">
+              {(Object.keys(SPEEDS) as SpeedLevel[]).map((lvl) => (
+                <button
+                  key={lvl}
+                  onClick={() => {
+                    setSpeedLevel(lvl);
+                    speedRef.current = lvl;
+                  }}
+                  className={`flex w-28 flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-center transition ${
+                    speedLevel === lvl
+                      ? "border-orange-400 bg-orange-500/90 shadow-lg"
+                      : "border-white/20 bg-white/10 hover:bg-white/20"
+                  }`}
+                >
+                  <span className="text-xl">{SPEEDS[lvl].emoji}</span>
+                  <span className="text-sm font-bold">{SPEEDS[lvl].label}</span>
+                  <span className="text-[11px] font-normal leading-tight text-slate-200">
+                    {SPEEDS[lvl].hint}
+                  </span>
+                </button>
+              ))}
+            </div>
             <button
               onClick={start}
-              className="mt-1 rounded-full bg-orange-500 px-6 py-2.5 font-bold text-white shadow-lg transition hover:bg-orange-400"
+              className="mt-2 rounded-full bg-orange-500 px-6 py-2.5 font-bold text-white shadow-lg transition hover:bg-orange-400"
             >
               Start waddling
             </button>
